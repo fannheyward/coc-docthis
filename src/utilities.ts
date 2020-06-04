@@ -1,6 +1,8 @@
+import { Uri } from 'coc.nvim';
 import * as path from 'path';
 import * as ts from 'typescript';
 import { TextDocument } from 'vscode-languageserver-protocol';
+import { SnippetString } from './SnippetString';
 
 const supportedNodeKinds = [
   ts.SyntaxKind.ClassDeclaration,
@@ -29,8 +31,7 @@ export function emptyArray(arr: any[]) {
 
 export function getDocumentFileName(document: TextDocument) {
   // Fix directory delimiters
-  // const fileName = fixWinPath(document.fileName);
-  const fileName = 'index.ts'; // TODO
+  const fileName = fixWinPath(Uri.parse(document.uri).fsPath);
 
   // Determine if this is a TypeScript document
   const isTypeScript = document.languageId === 'typescript' || document.languageId === 'typescriptreact';
@@ -69,7 +70,7 @@ export function findChildForPosition(node: ts.Node, position: number): ts.Node {
 
   findChildFunc(node);
 
-  // @ts-ignore FIXME
+  // @ts-ignore
   return lastMatchingNode;
 }
 
@@ -86,7 +87,7 @@ export function findFirstChildOfKindDepthFirst(node: ts.Node, kinds = supportedN
     }
   }
 
-  // @ts-ignore FIXME
+  // @ts-ignore
   return null;
 }
 
@@ -200,25 +201,11 @@ export function formatTypeName(typeName: string) {
   return '{' + typeName + '}';
 }
 
-class SnippetString {
-  constructor(value?: string) {}
-
-  get value(): string {
-    return '======';
-  }
-
-  appendText(value: string) {}
-  appendTabstop(index?: number) {}
-  appendPlaceholder(value: string, index?: number) {}
-  appendVariable(value: string, defaultValue: string) {}
-}
-
 export class SnippetStringBuilder {
   private readonly _snippet = new SnippetString();
 
   append(value: string) {
     this._snippet.appendText(value.toString());
-
     return this;
   }
 
@@ -229,27 +216,16 @@ export class SnippetStringBuilder {
 
   appendSnippetTabstop(index?: number) {
     this._snippet.appendTabstop(index);
-
     return this;
   }
 
-  appendSnippetPlaceholder(
-    // value: string | ((snippet: SnippetString) => any),
-    value: string,
-    index?: number
-  ) {
+  appendSnippetPlaceholder(value: string | ((snippet: SnippetString) => any), index?: number) {
     this._snippet.appendPlaceholder(value, index);
-
     return this;
   }
 
-  appendSnippetVariable(
-    name: string,
-    // defaultValue: string | ((snippet: SnippetString) => any)
-    defaultValue: string
-  ) {
+  appendSnippetVariable(name: string, defaultValue: string | ((snippet: SnippetString) => any)) {
     this._snippet.appendVariable(name, defaultValue);
-
     return this;
   }
 
@@ -276,7 +252,6 @@ export class SnippetStringBuilder {
 
     sb.appendLine(' */');
 
-    // FIXME
     return new SnippetString(sb.toString()).value;
   }
 }

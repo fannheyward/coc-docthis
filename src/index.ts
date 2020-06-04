@@ -1,5 +1,5 @@
 import { commands, CompletionItemProvider, ExtensionContext, languages, workspace } from 'coc.nvim';
-import { CompletionItem, CompletionItemKind, CompletionList, Position, TextDocument } from 'vscode-languageserver-protocol';
+import { CompletionItem, CompletionItemKind, CompletionList, Position, TextDocument, TextEdit, Range } from 'vscode-languageserver-protocol';
 import { Documenter } from './documenter';
 
 const langs = ['javascript', 'typescript', 'vue', 'javascriptreact', 'typescriptreact'];
@@ -12,15 +12,8 @@ function lazyInitializeDocumenter() {
   }
 }
 
-function languageIsSupported(document: TextDocument) {
-  return (
-    langs.findIndex((l) => document.languageId === l) !== -1
-    // || path.extname(document.fileName) === ".vue"
-  );
-}
-
 function verifyLanguageSupport(document: TextDocument, commandName: string) {
-  if (!languageIsSupported(document)) {
+  if (!langs.includes(document.languageId)) {
     workspace.showMessage(`Sorry! ${commandName} currently only supports JavaScript and TypeScript`);
     return false;
   }
@@ -53,15 +46,13 @@ class DocThisCompletionItemProvider implements CompletionItemProvider {
       item.insertText = '';
       item.sortText = '\0';
 
-      // const line = document.lineAt(position.line).text;
       const prefix = line.slice(0, position.character).match(/\/\**\s*$/);
       const suffix = line.slice(position.character).match(/^\s*\**\//);
-      // const start = position.translate(0, prefix ? -prefix[0].length : 0);
-      // FIXME
-      const start = 0;
-      // this.range = new Range(
-      //     start,
-      //     position.translate(0, suffix ? suffix[0].length : 0));
+      const start = Position.create(0, prefix ? -prefix[0].length : 0);
+      const end = Position.create(0, suffix ? suffix[0].length : 0);
+      console.error('=======prefix', prefix);
+      console.error('=======suffix', suffix);
+      console.error('=======start, end', start, end);
 
       item.command = {
         title: 'Document This',
@@ -81,14 +72,14 @@ export async function activate(context: ExtensionContext): Promise<void> {
 
   const provider = new DocThisCompletionItemProvider();
   context.subscriptions.push(
-    languages.registerCompletionItemProvider('docthis', 'docthis', langs, provider, ['/*', '*']),
+    languages.registerCompletionItemProvider('docthis', 'docthis', langs, provider, ['/', '*']),
 
     commands.registerCommand('docthis.documentThis', async (forCompletion: boolean) => {
       const commandName = 'Document This';
 
       const doc = await workspace.document;
       runCommand(commandName, doc.textDocument, () => {
-        documenter.documentThis(commandName, forCompletion);
+        documenter.documentThis(commandName, doc, forCompletion);
       });
     }),
 

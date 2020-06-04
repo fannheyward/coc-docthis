@@ -1,8 +1,8 @@
+import { commands, Document, OutputChannel, workspace } from 'coc.nvim';
 import * as ts from 'typescript';
-import { Range, Disposable, Position, TextDocument, TextEdit } from 'vscode-languageserver-protocol';
+import { Disposable, Position, Range, TextDocument, TextEdit } from 'vscode-languageserver-protocol';
 import { LanguageServiceHost } from './languageServiceHost';
 import * as utils from './utilities';
-import { workspace, OutputChannel, commands } from 'coc.nvim';
 
 function includeTypes() {
   return workspace.getConfiguration().get('docthis.includeTypes', true);
@@ -29,35 +29,28 @@ export class Documenter implements Disposable {
     this._services = ts.createLanguageService(this._languageServiceHost, ts.createDocumentRegistry());
   }
 
-  async documentThis(commandName: string, forCompletion: boolean) {
-    const doc = await workspace.document;
+  async documentThis(commandName: string, doc: Document, forCompletion: boolean) {
     const sourceFile = this._getSourceFile(doc.textDocument);
     if (!sourceFile) return;
 
-    // FIXME
-    const selection = await workspace.getSelectedRange('v', doc);
-    if (!selection) return;
-    // const selection = editor.selection;
-    const caret = selection.start;
+    const caret = await workspace.getCursorPosition();
 
     const position = ts.getPositionOfLineAndCharacter(sourceFile, caret.line, caret.character);
     const node = utils.findChildForPosition(sourceFile, position);
     const documentNode = utils.nodeIsOfKind(node) ? node : utils.findFirstParent(node);
 
     if (!documentNode) {
-      this._showFailureMessage(commandName, 'at the current position');
-      return;
+      return workspace.showMessage(`Sorry! '${commandName}' wasn't able to produce documentation at the current position.`, 'error');
     }
 
     const sb = new utils.SnippetStringBuilder();
 
     const docLocation = this._documentNode(sb, documentNode, sourceFile);
-
-    if (docLocation) {
-      this._insertDocumentation(sb, docLocation, forCompletion);
-    } else {
-      this._showFailureMessage(commandName, 'at the current position');
+    if (!docLocation) {
+      return workspace.showMessage(`Sorry! '${commandName}' wasn't able to produce documentation at the current position.`, 'error');
     }
+
+    this._insertDocumentation(sb, docLocation, forCompletion);
   }
 
   async traceNode() {
@@ -122,10 +115,6 @@ export class Documenter implements Disposable {
     const startPosition = Position.create(forCompletion ? location.line - 1 : location.line, location.character);
     const endPosition = Position.create(location.line, location.character);
 
-    // editor.insertSnippet(
-    //   sb.toCommentValue(),
-    //   Range.create(startPosition, endPosition)
-    // );
     const snip = TextEdit.replace(Range.create(startPosition, endPosition), sb.toCommentValue());
     await commands.executeCommand('editor.action.insertSnippet', snip);
   }
@@ -137,9 +126,9 @@ export class Documenter implements Disposable {
 
     this._services.getSyntacticDiagnostics(canonicalFileName);
 
-    const sourceFile = this._services?.getProgram()?.getSourceFile(canonicalFileName);
+    const sourceFile = this._services.getProgram()?.getSourceFile(canonicalFileName);
+    if (!sourceFile) return;
 
-    if (!sourceFile) return; //FIXME
     const newText = document.getText();
     sourceFile.update(newText, <ts.TextChangeRange>{
       newLength: newText.length,
