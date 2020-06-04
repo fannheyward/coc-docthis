@@ -1,5 +1,5 @@
 import { commands, CompletionItemProvider, ExtensionContext, languages, workspace } from 'coc.nvim';
-import { CompletionItem, CompletionItemKind, CompletionList, Position, TextDocument, TextEdit, Range } from 'vscode-languageserver-protocol';
+import { CompletionItem, CompletionItemKind, Position, TextDocument } from 'vscode-languageserver-protocol';
 import { Documenter } from './documenter';
 
 const langs = ['javascript', 'typescript', 'vue', 'javascriptreact', 'typescriptreact'];
@@ -36,7 +36,8 @@ function runCommand(commandName: string, document: TextDocument, implFunc: () =>
 }
 
 class DocThisCompletionItemProvider implements CompletionItemProvider {
-  async provideCompletionItems(document: TextDocument, position: Position): Promise<CompletionList | CompletionItem[] | null> {
+  async provideCompletionItems(document: TextDocument, position: Position): Promise<CompletionItem[]> {
+    const items: CompletionItem[] = [];
     const line = await workspace.getLine(document.uri, position.line);
     const prefix = line.slice(0, position.character);
 
@@ -46,30 +47,20 @@ class DocThisCompletionItemProvider implements CompletionItemProvider {
       item.insertText = '';
       item.sortText = '\0';
 
-      const prefix = line.slice(0, position.character).match(/\/\**\s*$/);
-      const suffix = line.slice(position.character).match(/^\s*\**\//);
-      const start = Position.create(0, prefix ? -prefix[0].length : 0);
-      const end = Position.create(0, suffix ? suffix[0].length : 0);
-      console.error('=======prefix', prefix);
-      console.error('=======suffix', suffix);
-      console.error('=======start, end', start, end);
-
       item.command = {
         title: 'Document This',
         command: 'docthis.documentThis',
         arguments: [true],
       };
 
-      return [item];
+      items.push(item);
     }
 
-    return [CompletionItem.create(' a */')];
+    return items;
   }
 }
 
 export async function activate(context: ExtensionContext): Promise<void> {
-  workspace.showMessage(`coc-docthis works!`);
-
   const provider = new DocThisCompletionItemProvider();
   context.subscriptions.push(
     languages.registerCompletionItemProvider('docthis', 'docthis', langs, provider, ['/', '*']),
@@ -77,19 +68,19 @@ export async function activate(context: ExtensionContext): Promise<void> {
     commands.registerCommand('docthis.documentThis', async (forCompletion: boolean) => {
       const commandName = 'Document This';
 
-      const doc = await workspace.document;
-      runCommand(commandName, doc.textDocument, () => {
-        documenter.documentThis(commandName, doc, forCompletion);
-      });
-    }),
-
-    commands.registerCommand('docthis.traceTypeScriptSyntaxNode', async () => {
-      const commandName = 'Trace TypeScript Syntax Node';
-
-      const doc = await workspace.document;
-      runCommand(commandName, doc.textDocument, () => {
-        documenter.traceNode();
+      const editerState = await workspace.getCurrentState();
+      runCommand(commandName, editerState.document, () => {
+        documenter.documentThis(editerState, commandName, forCompletion);
       });
     })
+
+    // commands.registerCommand('docthis.traceTypeScriptSyntaxNode', async () => {
+    //   const commandName = 'Trace TypeScript Syntax Node';
+
+    //   const editerState = await workspace.getCurrentState();
+    //   runCommand(commandName, editerState.document, () => {
+    //     documenter.traceNode(editerState);
+    //   });
+    // })
   );
 }

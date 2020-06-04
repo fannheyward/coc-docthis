@@ -1,4 +1,4 @@
-import { commands, Document, OutputChannel, workspace } from 'coc.nvim';
+import { commands, EditerState, OutputChannel, workspace } from 'coc.nvim';
 import * as ts from 'typescript';
 import { Disposable, Position, Range, TextDocument, TextEdit } from 'vscode-languageserver-protocol';
 import { LanguageServiceHost } from './languageServiceHost';
@@ -29,13 +29,11 @@ export class Documenter implements Disposable {
     this._services = ts.createLanguageService(this._languageServiceHost, ts.createDocumentRegistry());
   }
 
-  async documentThis(commandName: string, doc: Document, forCompletion: boolean) {
-    const sourceFile = this._getSourceFile(doc.textDocument);
+  async documentThis(state: EditerState, commandName: string, forCompletion: boolean) {
+    const sourceFile = this._getSourceFile(state.document);
     if (!sourceFile) return;
 
-    const caret = await workspace.getCursorPosition();
-
-    const position = ts.getPositionOfLineAndCharacter(sourceFile, caret.line, caret.character);
+    const position = ts.getPositionOfLineAndCharacter(sourceFile, state.position.line, state.position.character);
     const node = utils.findChildForPosition(sourceFile, position);
     const documentNode = utils.nodeIsOfKind(node) ? node : utils.findFirstParent(node);
 
@@ -53,17 +51,11 @@ export class Documenter implements Disposable {
     this._insertDocumentation(sb, docLocation, forCompletion);
   }
 
-  async traceNode() {
-    const doc = await workspace.document;
-    // FIXME
-    const selection = await workspace.getSelectedRange('v', doc);
-    if (!selection) return;
-    const caret = selection.start;
-
-    const sourceFile = this._getSourceFile(doc.textDocument);
+  async traceNode(state: EditerState) {
+    const sourceFile = this._getSourceFile(state.document);
     if (!sourceFile) return;
 
-    const position = ts.getPositionOfLineAndCharacter(sourceFile, caret.line, caret.character);
+    const position = ts.getPositionOfLineAndCharacter(sourceFile, state.position.line, state.position.character);
     const node = utils.findChildForPosition(sourceFile, position);
 
     const nodes: string[] = [];
@@ -75,7 +67,7 @@ export class Documenter implements Disposable {
     }
 
     const sb = new utils.StringBuilder();
-    nodes.reverse().forEach((n, i) => {
+    nodes.reverse().forEach((n) => {
       sb.appendLine(n);
     });
 
@@ -105,10 +97,6 @@ export class Documenter implements Disposable {
     sb.appendLine(node.getText());
 
     return sb.toString();
-  }
-
-  private _showFailureMessage(commandName: string, condition: string) {
-    workspace.showMessage(`Sorry! '${commandName}' wasn't able to produce documentation ${condition}.`, 'error');
   }
 
   private async _insertDocumentation(sb: utils.SnippetStringBuilder, location: ts.LineAndCharacter, forCompletion: boolean) {
