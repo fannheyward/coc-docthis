@@ -1,6 +1,6 @@
 {
   "name": "coc-docthis",
-  "version": "0.0.0-development",
+  "version": "0.1.0",
   "description": "Document This for coc.nvim",
   "author": "Heyward Fann <fannheyward@gmail.com>",
   "license": "MIT",
