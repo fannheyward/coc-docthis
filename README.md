@@ -1,6 +1,6 @@
 # coc-docthis
 
-Document This
+`Document This` extension for coc.nvim, fork of [vscode-docthis](https://github.com/joelday/vscode-docthis).
 
 ## Install
 
