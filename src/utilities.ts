@@ -21,7 +21,6 @@ const supportedNodeKinds = [
   ts.SyntaxKind.FunctionExpression,
   ts.SyntaxKind.VariableDeclaration,
   ts.SyntaxKind.CallSignature,
-  ts.SyntaxKind.VariableDeclarationList,
 ];
 
 export function emptyArray(arr: any[]) {
@@ -253,6 +252,6 @@ export class SnippetStringBuilder {
 
     sb.appendLine(' */');
 
-    return new SnippetString(sb.toString()).value;
+    return sb.toString();
   }
 }

@@ -6,12 +6,6 @@ const langs = ['javascript', 'typescript', 'vue', 'javascriptreact', 'typescript
 
 let documenter: Documenter;
 
-function lazyInitializeDocumenter() {
-  if (!documenter) {
-    documenter = new Documenter();
-  }
-}
-
 function verifyLanguageSupport(document: TextDocument, commandName: string) {
   if (!langs.includes(document.languageId)) {
     workspace.showMessage(`Sorry! ${commandName} currently only supports JavaScript and TypeScript`);
@@ -27,10 +21,10 @@ function runCommand(commandName: string, document: TextDocument, implFunc: () =>
   }
 
   try {
-    lazyInitializeDocumenter();
+    if (!documenter) documenter = new Documenter();
+
     implFunc();
   } catch (e) {
-    debugger;
     console.error(e);
   }
 }
