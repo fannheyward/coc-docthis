@@ -119,7 +119,7 @@ export class Documenter implements Disposable {
     return sourceFile;
   }
 
-  private _documentNode(sb: utils.SnippetStringBuilder, node: ts.Node, sourceFile: ts.SourceFile): ts.LineAndCharacter {
+  private _documentNode(sb: utils.SnippetStringBuilder, node: ts.Node, sourceFile: ts.SourceFile): ts.LineAndCharacter | undefined {
     switch (node.kind) {
       case ts.SyntaxKind.ClassDeclaration:
         this._emitClassDeclaration(sb, <ts.ClassDeclaration>node);
@@ -152,10 +152,7 @@ export class Documenter implements Disposable {
       case ts.SyntaxKind.ArrowFunction:
         return this._emitFunctionExpression(sb, <ts.FunctionExpression>node, sourceFile);
       case ts.SyntaxKind.VariableDeclaration:
-        return this._emitVariableDeclaration(sb, <ts.VariableDeclaration>node, sourceFile)!; // FIXME !
-      default:
-      // FIXME
-      // return;
+        return this._emitVariableDeclaration(sb, <ts.VariableDeclaration>node, sourceFile);
     }
 
     return ts.getLineAndCharacterOfPosition(sourceFile, node.getStart());
@@ -196,6 +193,7 @@ export class Documenter implements Disposable {
   }
 
   private _emitVariableDeclaration(sb: utils.SnippetStringBuilder, node: ts.VariableDeclaration, sourceFile: ts.SourceFile) {
+    // FIXME
     for (const child of node.getChildren()) {
       const result = this._documentNode(sb, child, sourceFile);
       if (result) {
@@ -413,7 +411,7 @@ export class Documenter implements Disposable {
       const name = parameter.name.getText();
       const isOptional = parameter.questionToken || parameter.initializer;
       const isArgs = !!parameter.dotDotDotToken;
-      const initializerValue = parameter.initializer ? parameter.initializer.getText() : ''; // FIXME empty
+      const initializerValue = parameter.initializer ? parameter.initializer.getText() : '';
 
       let typeName = '{*}';
 
@@ -489,13 +487,7 @@ export class Documenter implements Disposable {
   }
 
   private _emitConstructorDeclaration(sb: utils.SnippetStringBuilder, node: ts.ConstructorDeclaration) {
-    sb.appendSnippetPlaceholder(
-      // ` Creates an instance of ${(<ts.ClassDeclaration>(
-      //   node.parent!
-      // )).name.getText()}.`
-      // FIXME
-      ` Creates sss`
-    );
+    sb.appendSnippetPlaceholder(` Creates an instance of ${(<ts.ClassDeclaration>node.parent).name?.getText()}.`);
     sb.appendLine();
     this._emitAuthor(sb);
     this._emitDate(sb);
