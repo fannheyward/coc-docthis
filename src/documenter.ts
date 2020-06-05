@@ -193,10 +193,10 @@ export class Documenter implements Disposable {
   }
 
   private _emitVariableDeclaration(sb: utils.SnippetStringBuilder, node: ts.VariableDeclaration, sourceFile: ts.SourceFile) {
-    // FIXME
     for (const child of node.getChildren()) {
       const result = this._documentNode(sb, child, sourceFile);
-      if (result) {
+      if (result && child.kind === ts.SyntaxKind.VariableDeclaration) {
+        // FIXME
         return result;
       }
     }

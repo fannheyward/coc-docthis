@@ -18,24 +18,20 @@ export class SnippetString {
 
   constructor(value?: string) {
     this.value = value || '';
-    console.error('----SnippetString constructor:', value);
   }
 
   appendText(text: string) {
-    console.error('----SnippetString appendText:', text);
     this.value += SnippetString._escape(text);
     return this;
   }
 
   appendTabstop(number = this._tabstop++) {
-    console.error('----SnippetString appendTabstop:', number);
     this.value += '$';
     this.value += number;
     return this;
   }
 
   appendPlaceholder(value: string | ((snippet: SnippetString) => any), number: number = this._tabstop++): SnippetString {
-    console.error('----SnippetString appendTabstop:', value);
     if (typeof value === 'function') {
       const nested = new SnippetString();
       nested._tabstop = this._tabstop;
