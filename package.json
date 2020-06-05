@@ -8,8 +8,12 @@
   "keywords": [
     "coc.nvim"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fannheyward/coc-docthis.git"
+  },
   "engines": {
-    "coc": "^0.0.70"
+    "coc": "^0.0.77"
   },
   "scripts": {
     "lint": "eslint src --ext ts",
