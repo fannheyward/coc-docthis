@@ -1,5 +1,5 @@
 import { commands, EditerState, OutputChannel, workspace } from 'coc.nvim';
-import * as ts from 'typescript';
+import ts from 'typescript';
 import { Disposable, Position, Range, TextDocument, TextEdit } from 'vscode-languageserver-protocol';
 import { LanguageServiceHost } from './languageServiceHost';
 import * as utils from './utilities';

@@ -1,4 +1,4 @@
-import * as ts from 'typescript';
+import ts from 'typescript';
 
 export class LanguageServiceHost implements ts.LanguageServiceHost {
   private _files: ts.Map<{ text: string; version: number }>;

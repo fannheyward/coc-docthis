@@ -1,6 +1,6 @@
 import { Uri } from 'coc.nvim';
 import * as path from 'path';
-import * as ts from 'typescript';
+import ts from 'typescript';
 import { TextDocument } from 'vscode-languageserver-protocol';
 import { SnippetString } from './SnippetString';
 
