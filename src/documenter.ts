@@ -1,32 +1,21 @@
 import { commands, EditerState, OutputChannel, workspace } from 'coc.nvim';
 import ts from 'typescript';
 import { Disposable, Position, Range, TextDocument, TextEdit } from 'vscode-languageserver-protocol';
+import { Config } from './config';
 import { LanguageServiceHost } from './languageServiceHost';
 import * as utils from './utilities';
 
-function includeTypes() {
-  return workspace.getConfiguration().get('docthis.includeTypes', true);
-}
-
-function inferTypes() {
-  return workspace.getConfiguration().get('docthis.inferTypesFromNames', false);
-}
-
-function enableHungarianNotationEvaluation() {
-  return workspace.getConfiguration().get('docthis.enableHungarianNotationEvaluation', false);
-}
-
 export class Documenter implements Disposable {
+  private _config: Config;
   private _languageServiceHost: LanguageServiceHost;
   private _services: ts.LanguageService;
-
   private _outputChannel: OutputChannel;
 
   constructor() {
+    this._config = new Config();
     this._languageServiceHost = new LanguageServiceHost();
-    this._outputChannel = workspace.createOutputChannel('TypeScript Syntax Node Trace');
-
     this._services = ts.createLanguageService(this._languageServiceHost, ts.createDocumentRegistry());
+    this._outputChannel = workspace.createOutputChannel('TypeScript Syntax Node Trace');
   }
 
   async documentThis(state: EditerState, commandName: string, forCompletion: boolean) {
@@ -172,7 +161,7 @@ export class Documenter implements Disposable {
   }
 
   private _emitDescriptionHeader(sb: utils.SnippetStringBuilder) {
-    if (workspace.getConfiguration().get('docthis.includeDescriptionTag', false)) {
+    if (this._config.includeDescriptionTag) {
       sb.append('@description');
       sb.appendSnippetTabstop();
       sb.appendLine();
@@ -187,16 +176,15 @@ export class Documenter implements Disposable {
   }
 
   private _emitAuthor(sb: utils.SnippetStringBuilder) {
-    if (workspace.getConfiguration().get('docthis.includeAuthorTag', false)) {
-      const author: string = workspace.getConfiguration().get('docthis.authorName', '');
-      sb.append('@author ' + author);
+    if (this._config.includeAuthorTag) {
+      sb.append('@author ' + this._config.authorName);
       sb.appendSnippetTabstop();
       sb.appendLine();
     }
   }
 
   private _emitDate(sb: utils.SnippetStringBuilder) {
-    if (workspace.getConfiguration().get('docthis.includeDateTag', false)) {
+    if (this._config.includeDateTag) {
       sb.append('@date ' + utils.getCurrentDate());
       sb.appendSnippetTabstop();
       sb.appendLine();
@@ -279,10 +267,10 @@ export class Documenter implements Disposable {
     }
 
     // JSDoc fails to emit documentation for arrow function syntax. (https://github.com/jsdoc3/jsdoc/issues/1100)
-    if (includeTypes()) {
+    if (this._config.includeTypes) {
       if (node.type && node.type.getText().indexOf('=>') === -1) {
         sb.appendLine(`@type ${utils.formatTypeName(node.type.getText())}`);
-      } else if (enableHungarianNotationEvaluation() && this._isHungarianNotation(node.name.getText())) {
+      } else if (this._config.enableHungarianNotationEvaluation && this._isHungarianNotation(node.name.getText())) {
         sb.appendLine(`@type ${this._getHungarianNotationType(node.name.getText())}`);
       }
     }
@@ -326,8 +314,8 @@ export class Documenter implements Disposable {
   }
 
   private _emitMemberOf(sb: utils.SnippetStringBuilder, parent: ts.Node) {
-    const enabledForClasses = parent.kind === ts.SyntaxKind.ClassDeclaration && workspace.getConfiguration().get('docthis.includeMemberOfOnClassMembers', true);
-    const enabledForInterfaces = parent.kind === ts.SyntaxKind.InterfaceDeclaration && workspace.getConfiguration().get('docthis.includeMemberOfOnInterfaceMembers', true);
+    const enabledForClasses = parent.kind === ts.SyntaxKind.ClassDeclaration && this._config.includeMemberOfOnClassMembers;
+    const enabledForInterfaces = parent.kind === ts.SyntaxKind.InterfaceDeclaration && this._config.includeMemberOfOnInterfaceMembers;
     if (parent && (<any>parent)['name'] && (enabledForClasses || enabledForInterfaces)) {
       sb.appendLine('@memberof ' + (<any>parent)['name'].text);
     }
@@ -352,17 +340,16 @@ export class Documenter implements Disposable {
 
   private _emitReturns(sb: utils.SnippetStringBuilder, node: ts.MethodDeclaration | ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction) {
     if (utils.findNonVoidReturnInCurrentScope(node) || (node.type && node.type.getText() !== 'void')) {
-      if (workspace.getConfiguration().get('docthis.returnsTag', true)) {
+      if (this._config.returnsTag) {
         sb.append('@returns ');
       } else {
         sb.append('@return ');
       }
 
-      if (includeTypes() && node.type) {
+      if (this._config.includeTypes && node.type) {
         sb.append(' ' + utils.formatTypeName(node.type.getText()));
-      } else if (includeTypes() && inferTypes()) {
+      } else if (this._config.includeTypes && this._config.inferTypesFromNames) {
         sb.append(' ' + this._inferReturnTypeFromName(node.name!.getText()));
-        // FIXME !
       }
 
       sb.appendSnippetTabstop();
@@ -426,7 +413,7 @@ export class Documenter implements Disposable {
 
       let typeName = '{*}';
 
-      if (includeTypes()) {
+      if (this._config.includeTypes) {
         if (parameter.initializer && !parameter.type) {
           if (/^[0-9]/.test(initializerValue)) {
             typeName = '{number}';
@@ -437,16 +424,16 @@ export class Documenter implements Disposable {
           }
         } else if (parameter.type) {
           typeName = utils.formatTypeName((isArgs ? '...' : '') + parameter.type.getFullText().trim());
-        } else if (enableHungarianNotationEvaluation() && this._isHungarianNotation(name)) {
+        } else if (this._config.enableHungarianNotationEvaluation && this._isHungarianNotation(name)) {
           typeName = this._getHungarianNotationType(name);
-        } else if (inferTypes()) {
+        } else if (this._config.inferTypesFromNames) {
           typeName = this._inferParamTypeFromName(name);
         }
       }
 
       sb.append('@param ');
 
-      if (includeTypes()) {
+      if (this._config.includeTypes) {
         sb.append(typeName + ' ');
       }
 
@@ -529,7 +516,7 @@ export class Documenter implements Disposable {
   }
 
   private _emitHeritageClauses(sb: utils.SnippetStringBuilder, node: ts.ClassLikeDeclaration | ts.InterfaceDeclaration) {
-    if (!node.heritageClauses || !includeTypes()) {
+    if (!node.heritageClauses || !this._config.includeTypes) {
       return;
     }
 
