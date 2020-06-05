@@ -171,7 +171,9 @@ export class Documenter implements Disposable {
       sb.appendLine();
 
       // Jump a line after description free-type area before showing other tags
-      sb.appendLine();
+      if (this._config.includeExtraLineAfterDescription) {
+        sb.appendLine();
+      }
     }
   }
 

@@ -40,6 +40,10 @@ export class Config {
     return this.cfg.get('includeMemberOfOnInterfaceMembers') as boolean;
   }
 
+  get includeExtraLineAfterDescription() {
+    return this.cfg.get('includeExtraLineAfterDescription') as boolean;
+  }
+
   get returnsTag() {
     return this.cfg.get('returnsTag') as boolean;
   }
