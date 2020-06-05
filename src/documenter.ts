@@ -4,6 +4,7 @@ import { Disposable, Position, Range, TextDocument, TextEdit } from 'vscode-lang
 import { Config } from './config';
 import { LanguageServiceHost } from './languageServiceHost';
 import * as utils from './utilities';
+import dayjs from 'dayjs';
 
 export class Documenter implements Disposable {
   private _config: Config;
@@ -187,7 +188,8 @@ export class Documenter implements Disposable {
 
   private _emitDate(sb: utils.SnippetStringBuilder) {
     if (this._config.includeDateTag) {
-      sb.append('@date ' + utils.getCurrentDate());
+      const date = dayjs().format(this._config.dateTagFormat);
+      sb.append('@date ' + date);
       sb.appendSnippetTabstop();
       sb.appendLine();
     }

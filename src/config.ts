@@ -32,6 +32,10 @@ export class Config {
     return this.cfg.get('includeDateTag') as boolean;
   }
 
+  get dateTagFormat() {
+    return this.cfg.get('dateTagFormat') as string;
+  }
+
   get includeMemberOfOnClassMembers() {
     return this.cfg.get('includeMemberOfOnClassMembers') as boolean;
   }
