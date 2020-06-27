@@ -1,5 +1,5 @@
 import { commands, CompletionItemProvider, ExtensionContext, languages, workspace } from 'coc.nvim';
-import { CompletionItem, CompletionItemKind, Position, TextDocument } from 'vscode-languageserver-protocol';
+import { CompletionItem, CompletionItemKind, Position, TextDocument, Range } from 'vscode-languageserver-protocol';
 import { Documenter } from './documenter';
 
 const langs = ['javascript', 'typescript', 'vue', 'javascriptreact', 'typescriptreact'];
@@ -40,6 +40,15 @@ class DocThisCompletionItemProvider implements CompletionItemProvider {
       item.kind = CompletionItemKind.Snippet;
       item.insertText = '';
       item.sortText = '\0';
+
+      const prefixMatches = line.slice(0, position.character).match(/\/\**\s*$/);
+      const suffixMatches = line.slice(position.character).match(/^\s*\**\//)!;
+      const start = Position.create(position.line, position.character + (prefixMatches ? -prefixMatches[0].length : 0));
+      const end = Position.create(position.line, position.character + (suffixMatches ? suffixMatches[0].length : 0));
+      item.textEdit = {
+        range: Range.create(start, end),
+        newText: '',
+      };
 
       item.command = {
         title: 'Document This',
