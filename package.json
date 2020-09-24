@@ -1,6 +1,6 @@
 {
   "name": "coc-docthis",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "JSDoc extension for coc.nvim",
   "author": "Heyward Fann <fannheyward@gmail.com>",
   "license": "MIT",
@@ -46,7 +46,6 @@
     "webpack-cli": "^4.1.0"
   },
   "activationEvents": [
-    "onLanguage:vue",
     "onLanguage:javascript",
     "onLanguage:javascriptreact",
     "onLanguage:typescript",
