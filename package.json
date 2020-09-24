@@ -46,6 +46,7 @@
     "webpack-cli": "^3.3.12"
   },
   "activationEvents": [
+    "onLanguage:vue",
     "onLanguage:javascript",
     "onLanguage:javascriptreact",
     "onLanguage:typescript",
