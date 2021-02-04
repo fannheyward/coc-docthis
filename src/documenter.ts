@@ -1,10 +1,9 @@
-import { commands, EditerState, OutputChannel, workspace } from 'coc.nvim';
+import { commands, Disposable, EditerState, OutputChannel, Position, Range, TextDocument, TextEdit, window } from 'coc.nvim';
+import dayjs from 'dayjs';
 import ts from 'typescript';
-import { Disposable, Position, Range, TextDocument, TextEdit } from 'vscode-languageserver-protocol';
 import { Config } from './config';
 import { LanguageServiceHost } from './languageServiceHost';
 import * as utils from './utilities';
-import dayjs from 'dayjs';
 
 export class Documenter implements Disposable {
   private _config: Config;
@@ -16,7 +15,7 @@ export class Documenter implements Disposable {
     this._config = new Config();
     this._languageServiceHost = new LanguageServiceHost();
     this._services = ts.createLanguageService(this._languageServiceHost, ts.createDocumentRegistry());
-    this._outputChannel = workspace.createOutputChannel('TypeScript Syntax Node Trace');
+    this._outputChannel = window.createOutputChannel('TypeScript Syntax Node Trace');
   }
 
   async documentThis(state: EditerState, commandName: string, forCompletion: boolean) {
@@ -28,14 +27,14 @@ export class Documenter implements Disposable {
     const documentNode = utils.nodeIsOfKind(node) ? node : utils.findFirstParent(node);
 
     if (!documentNode) {
-      return workspace.showMessage(`Sorry! '${commandName}' wasn't able to produce documentation at the current position.`, 'error');
+      return window.showMessage(`Sorry! '${commandName}' wasn't able to produce documentation at the current position.`, 'error');
     }
 
     const sb = new utils.SnippetStringBuilder();
 
     const docLocation = this._documentNode(sb, documentNode, sourceFile);
     if (!docLocation) {
-      return workspace.showMessage(`Sorry! '${commandName}' wasn't able to produce documentation at the current position.`, 'error');
+      return window.showMessage(`Sorry! '${commandName}' wasn't able to produce documentation at the current position.`, 'error');
     }
 
     this._insertDocumentation(sb, docLocation, forCompletion);

@@ -1,5 +1,4 @@
-import { commands, CompletionItemProvider, ExtensionContext, languages, workspace } from 'coc.nvim';
-import { CompletionItem, CompletionItemKind, Position, TextDocument, Range } from 'vscode-languageserver-protocol';
+import { commands, CompletionItem, CompletionItemKind, CompletionItemProvider, ExtensionContext, languages, Position, Range, TextDocument, window, workspace } from 'coc.nvim';
 import { Documenter } from './documenter';
 
 const langs = ['javascript', 'typescript', 'vue', 'javascriptreact', 'typescriptreact'];
@@ -8,7 +7,7 @@ let documenter: Documenter;
 
 function verifyLanguageSupport(document: TextDocument, commandName: string) {
   if (!langs.includes(document.languageId)) {
-    workspace.showMessage(`Sorry! ${commandName} currently only supports JavaScript and TypeScript`);
+    window.showMessage(`Sorry! ${commandName} currently only supports JavaScript and TypeScript`);
     return false;
   }
 
@@ -36,10 +35,12 @@ class DocThisCompletionItemProvider implements CompletionItemProvider {
     const prefix = line.slice(0, position.character);
 
     if (prefix.match(/^\s*$|\/\*\*\s*$|^\s*\/\*\*+\s*$/)) {
-      const item = CompletionItem.create('/** Document This */');
-      item.kind = CompletionItemKind.Snippet;
-      item.insertText = '';
-      item.sortText = '\0';
+      const item: CompletionItem = {
+        label: '/** Document This */',
+        kind: CompletionItemKind.Snippet,
+        insertText: '',
+        sortText: '\0',
+      };
 
       const prefixMatches = line.slice(0, position.character).match(/\/\**\s*$/);
       const suffixMatches = line.slice(position.character).match(/^\s*\**\//)!;

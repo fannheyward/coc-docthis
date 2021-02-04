@@ -1,7 +1,6 @@
-import { Uri } from 'coc.nvim';
+import { TextDocument, Uri } from 'coc.nvim';
 import * as path from 'path';
 import ts from 'typescript';
-import { TextDocument } from 'vscode-languageserver-protocol';
 import { SnippetString } from './SnippetString';
 
 const supportedNodeKinds = [
