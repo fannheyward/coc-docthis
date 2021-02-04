@@ -46,7 +46,8 @@ export class LanguageServiceHost implements ts.LanguageServiceHost {
     };
   }
 
-  getSourceFile(fileName: string, languageVersion: ts.ScriptTarget, onError?: (message: string) => void) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  getSourceFile(fileName: string, _languageVersion: ts.ScriptTarget, _onError?: (message: string) => void) {
     if (!this._files[fileName]) {
       return;
     }
