@@ -1,4 +1,4 @@
-import { commands, CompletionItem, CompletionItemKind, CompletionItemProvider, ExtensionContext, languages, Position, Range, TextDocument, window, workspace } from 'coc.nvim';
+import { commands, CompletionItem, CompletionItemKind, CompletionItemProvider, ExtensionContext, Position, Range, TextDocument, window, workspace } from 'coc.nvim';
 import { Documenter } from './documenter';
 
 const langs = ['javascript', 'typescript', 'vue', 'javascriptreact', 'typescriptreact'];
@@ -65,10 +65,7 @@ class DocThisCompletionItemProvider implements CompletionItemProvider {
 }
 
 export async function activate(context: ExtensionContext): Promise<void> {
-  const provider = new DocThisCompletionItemProvider();
   context.subscriptions.push(
-    languages.registerCompletionItemProvider('docthis', 'docthis', langs, provider, ['/', '*']),
-
     commands.registerCommand('docthis.documentThis', async (forCompletion: boolean) => {
       const commandName = 'Document This';
 
