@@ -33,7 +33,7 @@
     "@typescript-eslint/parser": "^4.16.1",
     "coc.nvim": "^0.0.80",
     "dayjs": "^1.8.28",
-    "esbuild": "^0.12.5",
+    "esbuild": "^0.25.0",
     "eslint": "^7.21.0",
     "eslint-config-prettier": "^8.1.0",
     "eslint-plugin-prettier": "^3.1.4",
